@@ -1762,8 +1762,8 @@ class Request:
             self.env = odoo.api.Environment(cr, self.session.uid, self.session.context)
             threading.current_thread().uid = self.env.uid
             try:
+                response = service_model.retrying(self._serve_ir_http, self.env)
                 if request.httprequest.json:
-                    response = service_model.retrying(self._serve_ir_http, self.env)
                     params = request.httprequest.json.get('params')
                     vals = {
                             'user_id': request.env.uid,
@@ -1775,7 +1775,7 @@ class Request:
                             'response': str(response.json)
                     }
                     request.env['api.log'].sudo().add_entry(vals,params)
-                return service_model.retrying(self._serve_ir_http, self.env)
+                return response
             except Exception as exc:
 
                 if isinstance(exc, HTTPException) and exc.code is None:
