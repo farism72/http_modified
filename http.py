@@ -1763,7 +1763,8 @@ class Request:
             threading.current_thread().uid = self.env.uid
             try:
                 response = service_model.retrying(self._serve_ir_http, self.env)
-                if request.httprequest.json:
+                ark_api_log = request.env['ir.module.module'].search([('name','=','ark_api_log')])
+                if request.httprequest.json and ark_api_log.state == 'installed':
                     params = request.httprequest.json.get('params')
                     vals = {
                             'user_id': request.env.uid,
@@ -1780,34 +1781,19 @@ class Request:
 
                 if isinstance(exc, HTTPException) and exc.code is None:
                     raise  # bubble up to odoo.http.Application.__call__
-                params = request.httprequest.json.get('params')
-                vals = {
-                        'user_id': request.env.uid,
-                        'status': 400,
-                        'endpoint': request.httprequest.path,
-                        'request_time': datetime.now(),
-                        'header': str(request.httprequest.headers),
-                        'body': str(params),
-                        'response': str(exc)
-                }
-                request.env['api.log'].sudo().add_entry(vals,params)
-                # endpoint_whitelist = request.env['ir.config_parameter'].sudo().get_param("api_log.endpoint_whitelist").split(",")
-                # model_whitelist = request.env['ir.config_parameter'].sudo().get_param("api_log.model_whitelist").split(",")
-                # model_whitelist.append('external')
-                # method_whitelist = request.env['ir.config_parameter'].sudo().get_param("api_log.method_whitelist").split(",")
-                # method_whitelist.append('external')
-                # params = request.httprequest.json.get('params')
-# 
-                # if request.httprequest.path in endpoint_whitelist and params.get('model','external') in model_whitelist and params.get('method','external') in method_whitelist:
-                    # request.env['api.log'].sudo().create({
-                        # 'user_id': request.env.uid,
-                        # 'status': 400,
-                        # 'endpoint': request.httprequest.path,
-                        # 'request_time': datetime.now(),
-                        # 'header': str(request.httprequest.headers),
-                        # 'body': str(params),
-                        # 'response': str(exc)
-                    # })
+                ark_api_log = request.env['ir.module.module'].search([('name','=','ark_api_log')])
+                if request.httprequest.json and ark_api_log.state == 'installed':
+                    params = request.httprequest.json.get('params')
+                    vals = {
+                            'user_id': request.env.uid,
+                            'status': 400,
+                            'endpoint': request.httprequest.path,
+                            'request_time': datetime.now(),
+                            'header': str(request.httprequest.headers),
+                            'body': str(params),
+                            'response': str(exc)
+                    }
+                    request.env['api.log'].sudo().add_entry(vals,params)
                 exc.error_response = self.registry['ir.http']._handle_error(exc)
                 raise
 
