@@ -1763,7 +1763,7 @@ class Request:
             threading.current_thread().uid = self.env.uid
             try:
                 response = service_model.retrying(self._serve_ir_http, self.env)
-                ark_api_log = request.env['ir.module.module'].search([('name','=','ark_api_log')])
+                ark_api_log = request.env['ir.module.module'].sudo().search([('name','=','ark_api_log')])
                 if request.httprequest.json and ark_api_log.state == 'installed':
                     params = request.httprequest.json.get('params')
                     vals = {
@@ -1781,7 +1781,7 @@ class Request:
 
                 if isinstance(exc, HTTPException) and exc.code is None:
                     raise  # bubble up to odoo.http.Application.__call__
-                ark_api_log = request.env['ir.module.module'].search([('name','=','ark_api_log')])
+                ark_api_log = request.env['ir.module.module'].sudo().search([('name','=','ark_api_log')])
                 if request.httprequest.json and ark_api_log.state == 'installed':
                     params = request.httprequest.json.get('params')
                     vals = {
